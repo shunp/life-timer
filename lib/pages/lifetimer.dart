@@ -4,23 +4,54 @@ import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
 import 'dart:async';
 import 'dart:math';
 
-class LifespanPage extends StatefulWidget {
+class LifeTimerPage extends StatefulWidget {
   @override
-  _LifespanPageState createState() => _LifespanPageState();
+  _LifeTimerPageState createState() => _LifeTimerPageState();
 }
 
-class _LifespanPageState extends State<LifespanPage> {
+class _LifeTimerPageState extends State<LifeTimerPage> {
+  // 日時フォーマット
   final formats = {
     InputType.both: DateFormat("yyyy-MM-dd HH:mm:ss"),
     InputType.date: DateFormat('yyyy-MM-dd'),
     InputType.time: DateFormat("HH:mm"),
   };
 
-  InputType inputType = InputType.both;
-  bool editable = true;
+  // 日時
   DateTime birthDate;
   DateTime now;
   DateTime expectedDeathDate;
+
+  @override
+  void initState() {
+    super.initState();
+    Timer.periodic(Duration(seconds: 1), (timer) {
+      setState(() {
+        now = new DateTime.now();
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
+    return Scaffold(
+        appBar: AppBar(title: Text('LifeTimer')),
+        body: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: ListView(
+            children: <Widget>[
+              _buildTitle(),
+              _buildBirthDateInputField(),
+              _buildBirthTextField(),
+              _buildNowTextField(),
+              _buildExpectedDateTextField(),
+              _buildLeftTimeParams(),
+              _buildRadialProgress(width),
+            ],
+          ),
+        ));
+  }
 
   String _getBirthDate() {
     return birthDate != null
@@ -39,41 +70,50 @@ class _LifespanPageState extends State<LifespanPage> {
   }
 
   String _getExpectedDeathInDays() {
-    var leftTimeDuration = calcLifeTimeDuration();
+    var leftTimeDuration = _calcLifeTimeDuration();
     return leftTimeDuration != null ? leftTimeDuration.inDays.toString() : "-";
   }
 
   String _getExpectedDeathInHours() {
-    var leftTimeDuration = calcLifeTimeDuration();
+    var leftTimeDuration = _calcLifeTimeDuration();
     return leftTimeDuration != null ? leftTimeDuration.inHours.toString() : "-";
   }
 
   String _getExpectedDeathInMinutes() {
-    var leftTimeDuration = calcLifeTimeDuration();
+    var leftTimeDuration = _calcLifeTimeDuration();
     return leftTimeDuration != null
         ? leftTimeDuration.inMinutes.toString()
         : "-";
   }
 
   String _getExpectedDeathInSeconds() {
-    var leftTimeDuration = calcLifeTimeDuration();
+    var leftTimeDuration = _calcLifeTimeDuration();
     return leftTimeDuration != null
         ? leftTimeDuration.inSeconds.toString()
         : "-";
   }
 
-  Duration calcLifeTimeDuration() {
+  Duration _calcLifeTimeDuration() {
     return expectedDeathDate != null ? expectedDeathDate.difference(now) : null;
   }
 
-  String calcLeftTimePercent() {
+  String _getLeftTimePercentStr() {
+    if (expectedDeathDate == null) {
+      return "- %";
+    }
+    return _calcLeftTimePersent().toStringAsFixed(8) + "%";
+  }
+
+  double _calcLeftTimePersent() {
+    if (expectedDeathDate == null) {
+      return 0.0;
+    }
     Duration livingDuration = expectedDeathDate.difference(now);
     Duration averageDeathDuration =
         Duration(days: 30652, hours: 16, minutes: 48);
     int livingDurationInMillis = livingDuration.inMilliseconds;
     int averageDeathDurationInMillis = averageDeathDuration.inMilliseconds;
-    print(livingDurationInMillis / averageDeathDurationInMillis);
-    return (livingDurationInMillis * 100/ averageDeathDurationInMillis).toStringAsFixed(4) + "%";
+    return livingDurationInMillis * 100 / averageDeathDurationInMillis;
   }
 
   void setBirthAndExpectedDeathDate(DateTime _birthDate) {
@@ -87,7 +127,6 @@ class _LifespanPageState extends State<LifespanPage> {
 
   Widget _buildTitle() {
     return Container(
-        // alignment: Alignment.center,
         padding: EdgeInsets.only(bottom: 10.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -97,7 +136,7 @@ class _LifespanPageState extends State<LifespanPage> {
               width: 5.0,
             ),
             Text(
-              'あなたの残された日数を計算します',
+              'あなたに残された日数を計算します',
               style: TextStyle(fontSize: 20.0),
             ),
           ],
@@ -108,9 +147,9 @@ class _LifespanPageState extends State<LifespanPage> {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 10.0),
       child: DateTimePickerFormField(
-        inputType: inputType,
-        format: formats[inputType],
-        editable: editable,
+        inputType: InputType.date,
+        format: formats[InputType.date],
+        editable: true,
         decoration: InputDecoration(
             labelText: '生年月日を入力してください', hasFloatingPlaceholder: false),
         onChanged: (birthDate) =>
@@ -195,81 +234,55 @@ class _LifespanPageState extends State<LifespanPage> {
     );
   }
 
-  Widget _buildRadialProgress() {
+  Widget _buildRadialProgress(double deviceWidth) {
+    double circleSize = deviceWidth * 0.7;
+    double textSize = deviceWidth * 0.065;
     return Container(
       padding: EdgeInsets.all(4.0),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           CustomPaint(
             foregroundPainter: MyPainter(
-                lineColor: Colors.amber,
+                lineColor: Colors.grey,
                 completeColor: Colors.blueAccent,
-                completePercent: 40,
+                completePercent: _calcLeftTimePersent(),
                 width: 8.0),
             child: Container(
               padding: EdgeInsets.all(10),
-              height: 180.0,
-              width: 180.0,
+              height: circleSize,
+              width: circleSize,
               child: RaisedButton(
                 color: Colors.blue,
                 shape: CircleBorder(),
-                child: Text("${calcLeftTimePercent()}"),
+                child: Row(
+                  children: <Widget>[
+                    Icon(
+                      Icons.directions_run,
+                      size: textSize,
+                    ),
+                    Text(
+                      "${_getLeftTimePercentStr()}",
+                      style: TextStyle(fontSize: textSize),
+                    ),
+                  ],
+                ),
                 onPressed: () {},
               ),
             ),
           ),
-          Container(
-            alignment: Alignment.center,
-            child: Icon(Icons.directions_run),
-          )
+          // Container(
+          //   padding: EdgeInsets.all(10),
+          //   child: Text("残りの時間を大切に！", style: TextStyle(
+          //     fontSize: 15.0,
+
+          //   ),
+          //   ),
+
+          // )
         ],
       ),
     );
-  }
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-      appBar: AppBar(title: Text('LifeTimer')),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: ListView(
-          children: <Widget>[
-            _buildTitle(),
-            _buildBirthDateInputField(),
-            _buildBirthTextField(),
-            _buildNowTextField(),
-            _buildExpectedDateTextField(),
-            _buildLeftTimeParams(),
-            _buildRadialProgress(),
-          ],
-        ),
-      ));
-
-  // For Debug
-  void currentTime() {
-    print("birthDate: $birthDate");
-    print("now: $now");
-
-    var averageDeathAge = 83.98; // year: 83, day: 357, hour: 16, minute: 48
-    var averageDaethDuration = Duration(days: 30652, hours: 16, minutes: 48);
-    var expectedDeathDate = birthDate.add(averageDaethDuration);
-    var leftDateTime = expectedDeathDate.difference(now);
-
-    print("expectedDeathDate: $expectedDeathDate");
-    print("leftDateTime: $leftDateTime");
-    print("leftDateTime.inHours: ${leftDateTime.inHours}");
-    print("leftDateTime.inDays: ${leftDateTime.inDays}");
-    print("leftDateTime.inSeconds: ${leftDateTime.inSeconds}");
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    Timer.periodic(Duration(seconds: 1), (timer) {
-      setState(() {
-        now = new DateTime.now();
-      });
-    });
   }
 }
 
