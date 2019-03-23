@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
 import 'dart:async';
-import 'dart:math';
+import '../widgets/lifetimer_painter.dart';
 
 class LifeTimerPage extends StatefulWidget {
   @override
@@ -16,7 +16,6 @@ class _LifeTimerPageState extends State<LifeTimerPage> {
     InputType.date: DateFormat('yyyy-MM-dd'),
     InputType.time: DateFormat("HH:mm"),
   };
-
   // 日時
   DateTime birthDate;
   DateTime now;
@@ -36,111 +35,41 @@ class _LifeTimerPageState extends State<LifeTimerPage> {
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     return Scaffold(
-        appBar: AppBar(title: Text('LifeTimer')),
-        body: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: ListView(
-            children: <Widget>[
-              _buildTitle(),
-              _buildBirthDateInputField(),
-              _buildBirthTextField(),
-              _buildNowTextField(),
-              _buildExpectedDateTextField(),
-              _buildLeftTimeParams(),
-              _buildRadialProgress(width),
-            ],
-          ),
-        ));
-  }
-
-  String _getBirthDate() {
-    return birthDate != null
-        ? formats[InputType.date].format(birthDate)
-        : '入力待ち';
-  }
-
-  String _getNow() {
-    return now != null ? formats[InputType.both].format(now) : "なし";
-  }
-
-  String _getExpectedDeathDate() {
-    return expectedDeathDate != null
-        ? formats[InputType.date].format(expectedDeathDate)
-        : "入力待ち";
-  }
-
-  String _getExpectedDeathInDays() {
-    var leftTimeDuration = _calcLifeTimeDuration();
-    return leftTimeDuration != null ? leftTimeDuration.inDays.toString() : "-";
-  }
-
-  String _getExpectedDeathInHours() {
-    var leftTimeDuration = _calcLifeTimeDuration();
-    return leftTimeDuration != null ? leftTimeDuration.inHours.toString() : "-";
-  }
-
-  String _getExpectedDeathInMinutes() {
-    var leftTimeDuration = _calcLifeTimeDuration();
-    return leftTimeDuration != null
-        ? leftTimeDuration.inMinutes.toString()
-        : "-";
-  }
-
-  String _getExpectedDeathInSeconds() {
-    var leftTimeDuration = _calcLifeTimeDuration();
-    return leftTimeDuration != null
-        ? leftTimeDuration.inSeconds.toString()
-        : "-";
-  }
-
-  Duration _calcLifeTimeDuration() {
-    return expectedDeathDate != null ? expectedDeathDate.difference(now) : null;
-  }
-
-  String _getLeftTimePercentStr() {
-    if (expectedDeathDate == null) {
-      return "- %";
-    }
-    return _calcLeftTimePersent().toStringAsFixed(8) + "%";
-  }
-
-  double _calcLeftTimePersent() {
-    if (expectedDeathDate == null) {
-      return 0.0;
-    }
-    Duration livingDuration = expectedDeathDate.difference(now);
-    Duration averageDeathDuration =
-        Duration(days: 30652, hours: 16, minutes: 48);
-    int livingDurationInMillis = livingDuration.inMilliseconds;
-    int averageDeathDurationInMillis = averageDeathDuration.inMilliseconds;
-    return livingDurationInMillis * 100 / averageDeathDurationInMillis;
-  }
-
-  void setBirthAndExpectedDeathDate(DateTime _birthDate) {
-    // var averageDeathAge = 83.98; // year: 83, day: 357, hour: 16, minute: 48
-    var averageDaethDuration = Duration(days: 30652, hours: 16, minutes: 48);
-    setState(() {
-      birthDate = _birthDate;
-      expectedDeathDate = birthDate.add(averageDaethDuration);
-    });
+      appBar: AppBar(title: Text("LifeTimer")),
+      body: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: ListView(
+          children: <Widget>[
+            _buildTitle(),
+            _buildBirthDateInputField(),
+            _buildBirthTextField(),
+            _buildNowTextField(),
+            _buildExpectedDateTextField(),
+            _buildLeftTimeParams(),
+            _buildRadialProgress(width),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildTitle() {
-    return Container(
-        padding: EdgeInsets.only(bottom: 10.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Icon(Icons.mood),
-            SizedBox(
-              width: 5.0,
-            ),
-            Text(
-              'あなたに残された日数を計算します',
-              style: TextStyle(fontSize: 20.0),
-            ),
-          ],
-        ));
+    return Padding(
+      padding: EdgeInsets.only(bottom: 10.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Icon(Icons.mood),
+          SizedBox(
+            width: 5.0,
+          ),
+          Text(
+            'あなたに残された日数を計算します',
+            style: TextStyle(fontSize: 18.0),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildBirthDateInputField() {
@@ -152,10 +81,18 @@ class _LifeTimerPageState extends State<LifeTimerPage> {
         editable: true,
         decoration: InputDecoration(
             labelText: '生年月日を入力してください', hasFloatingPlaceholder: false),
-        onChanged: (birthDate) =>
-            setState(() => setBirthAndExpectedDeathDate(birthDate)),
+        onChanged: (birthDate) => _setBirthAndExpectedDeathDate(birthDate),
       ),
     );
+  }
+
+  void _setBirthAndExpectedDeathDate(DateTime _birthDate) {
+    // var averageDeathAge = 83.98; // year: 83, day: 357, hour: 16, minute: 48
+    var averageDaethDuration = Duration(days: 30652, hours: 16, minutes: 48);
+    setState(() {
+      birthDate = _birthDate;
+      expectedDeathDate = birthDate.add(averageDaethDuration);
+    });
   }
 
   Widget _buildBirthTextField() {
@@ -165,6 +102,12 @@ class _LifeTimerPageState extends State<LifeTimerPage> {
     );
   }
 
+  String _getBirthDate() {
+    return birthDate != null
+        ? formats[InputType.date].format(birthDate)
+        : '入力待ち';
+  }
+
   Widget _buildNowTextField() {
     return Padding(
       padding: EdgeInsets.all(5.0),
@@ -172,12 +115,16 @@ class _LifeTimerPageState extends State<LifeTimerPage> {
     );
   }
 
+  String _getNow() {
+    return now != null ? formats[InputType.both].format(now) : "なし";
+  }
+
   Widget _buildExpectedDateTextField() {
     return Padding(
       padding: EdgeInsets.all(30.0),
       child: Column(
         children: <Widget>[
-          Text("平均寿命から推定されるあなたの死亡予定日"),
+          Text("平均寿命から計算されるあなたの推定命日"),
           SizedBox(
             height: 5.0,
           ),
@@ -188,6 +135,12 @@ class _LifeTimerPageState extends State<LifeTimerPage> {
         ],
       ),
     );
+  }
+
+  String _getExpectedDeathDate() {
+    return expectedDeathDate != null
+        ? formats[InputType.date].format(expectedDeathDate)
+        : "入力待ち";
   }
 
   Widget _buildLeftTimeParams() {
@@ -234,6 +187,34 @@ class _LifeTimerPageState extends State<LifeTimerPage> {
     );
   }
 
+  String _getExpectedDeathInDays() {
+    var leftTimeDuration = _calcLifeTimeDuration();
+    return leftTimeDuration != null ? leftTimeDuration.inDays.toString() : "-";
+  }
+
+  String _getExpectedDeathInHours() {
+    var leftTimeDuration = _calcLifeTimeDuration();
+    return leftTimeDuration != null ? leftTimeDuration.inHours.toString() : "-";
+  }
+
+  String _getExpectedDeathInMinutes() {
+    var leftTimeDuration = _calcLifeTimeDuration();
+    return leftTimeDuration != null
+        ? leftTimeDuration.inMinutes.toString()
+        : "-";
+  }
+
+  String _getExpectedDeathInSeconds() {
+    var leftTimeDuration = _calcLifeTimeDuration();
+    return leftTimeDuration != null
+        ? leftTimeDuration.inSeconds.toString()
+        : "-";
+  }
+
+  Duration _calcLifeTimeDuration() {
+    return expectedDeathDate != null ? expectedDeathDate.difference(now) : null;
+  }
+
   Widget _buildRadialProgress(double deviceWidth) {
     double circleSize = deviceWidth * 0.7;
     double textSize = deviceWidth * 0.065;
@@ -243,7 +224,7 @@ class _LifeTimerPageState extends State<LifeTimerPage> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           CustomPaint(
-            foregroundPainter: MyPainter(
+            foregroundPainter: LifeTimerPainter(
                 lineColor: Colors.grey,
                 completeColor: Colors.blueAccent,
                 completePercent: _calcLeftTimePersent(),
@@ -271,55 +252,28 @@ class _LifeTimerPageState extends State<LifeTimerPage> {
               ),
             ),
           ),
-          // Container(
-          //   padding: EdgeInsets.all(10),
-          //   child: Text("残りの時間を大切に！", style: TextStyle(
-          //     fontSize: 15.0,
-
-          //   ),
-          //   ),
-
-          // )
         ],
       ),
     );
   }
-}
 
-class MyPainter extends CustomPainter {
-  Color lineColor;
-  Color completeColor;
-  double completePercent;
-  double width;
-
-  MyPainter(
-      {this.lineColor, this.completeColor, this.completePercent, this.width});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    Paint line = Paint()
-      ..color = lineColor
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = width;
-
-    Paint complete = Paint()
-      ..color = completeColor
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = width;
-
-    Offset center = Offset(size.width / 2, size.height / 2);
-    double radius = min(size.width / 2, size.height / 2);
-    canvas.drawCircle(center, radius, line);
-
-    double arcAngle = 2 * pi * (completePercent / 100);
-    canvas.drawArc(Rect.fromCircle(center: center, radius: radius), -pi / 2,
-        arcAngle, false, complete);
+  String _getLeftTimePercentStr() {
+    if (expectedDeathDate == null) {
+      return "- %";
+    }
+    return _calcLeftTimePersent().toStringAsFixed(8) + "%";
   }
 
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) {
-    return true;
+  double _calcLeftTimePersent() {
+    if (expectedDeathDate == null) {
+      return 0.0;
+    }
+    Duration livingDuration = expectedDeathDate.difference(now);
+    Duration averageDeathDuration =
+        Duration(days: 30652, hours: 16, minutes: 48);
+    int livingDurationInMillis = livingDuration.inMilliseconds;
+    int averageDeathDurationInMillis = averageDeathDuration.inMilliseconds;
+    return livingDurationInMillis * 100 / averageDeathDurationInMillis;
   }
 }
+
