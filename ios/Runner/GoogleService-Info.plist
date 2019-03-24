@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AD_UNIT_ID_FOR_BANNER_TEST</key>
+	<string>ca-app-pub-3940256099942544/2934735716</string>
+	<key>AD_UNIT_ID_FOR_INTERSTITIAL_TEST</key>
+	<string>ca-app-pub-3940256099942544/4411468910</string>
+	<key>CLIENT_ID</key>
+	<string>232234805651-nbug6brkn7c758tft1stgplpscq4dv0m.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.232234805651-nbug6brkn7c758tft1stgplpscq4dv0m</string>
+	<key>API_KEY</key>
+	<string>AIzaSyCr5ug1J4QzpfIAL4ZDddqIV80fv8jawxo</string>
+	<key>GCM_SENDER_ID</key>
+	<string>232234805651</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.lifetimer</string>
+	<key>PROJECT_ID</key>
+	<string>lifetimer-4a8df</string>
+	<key>STORAGE_BUCKET</key>
+	<string>lifetimer-4a8df.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<true></true>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<false></false>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:232234805651:ios:807fcde329cb9446</string>
+	<key>DATABASE_URL</key>
+	<string>https://lifetimer-4a8df.firebaseio.com</string>
+</dict>
+</plist>

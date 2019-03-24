@@ -5,14 +5,15 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import '../widgets/lifetimer_painter.dart';
+import '../widgets/flip_counter.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
-class LifeTimerPage extends StatefulWidget {
+class LifeTimerNotifyPage extends StatefulWidget {
   @override
-  _LifeTimerPageState createState() => _LifeTimerPageState();
+  _LifeTimerNotifyPageState createState() => _LifeTimerNotifyPageState();
 }
 
-class _LifeTimerPageState extends State<LifeTimerPage> {
+class _LifeTimerNotifyPageState extends State<LifeTimerNotifyPage> {
   // 日時フォーマット
   final formats = {
     InputType.both: DateFormat("yyyy-MM-dd HH:mm:ss"),
@@ -23,22 +24,24 @@ class _LifeTimerPageState extends State<LifeTimerPage> {
   DateTime birthDate;
   DateTime now;
   DateTime expectedDeathDate;
+  // 通知
+  bool doNotify = false;
 
   final FirebaseMessaging _firebaseMessaging = new FirebaseMessaging();
 
   @override
   void initState() {
     super.initState();
-    Timer.periodic(Duration(seconds: 10), (timer) {
+    Timer.periodic(Duration(seconds: 1), (timer) {
       setState(() {
         now = new DateTime.now();
+        digits = [];
+        for (int i = 0; i < 60; i++) {
+          digits.add(i);
+        }
       });
-      // 通知タイミング
-      
-      String url = "https://fcm.googleapis.com/fcm/send";
-      // Map<String, dynamic> body = NotifyMessage.toMap();
-      var a = createPost(url);
-      print(a);
+      print(digits);
+      notifyLeftTime();
     });
     _firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) async {
@@ -67,6 +70,13 @@ class _LifeTimerPageState extends State<LifeTimerPage> {
     _firebaseMessaging.subscribeToTopic("/topics/all");
   }
 
+  @override
+  void dispose() {
+    notifyTermController.dispose();
+    notifyTermFocusNode.dispose();
+    super.dispose();
+  }
+
   void _buildDialog(BuildContext context, String message) {
     showDialog(
         context: context,
@@ -92,6 +102,8 @@ class _LifeTimerPageState extends State<LifeTimerPage> {
         });
   }
 
+  var digits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
@@ -108,6 +120,8 @@ class _LifeTimerPageState extends State<LifeTimerPage> {
             _buildExpectedDateTextField(),
             _buildLeftTimeParams(),
             _buildRadialProgress(width),
+            _buildNotifySettings(width),
+            _buildFlipCounter(),
           ],
         ),
       ),
@@ -309,14 +323,7 @@ class _LifeTimerPageState extends State<LifeTimerPage> {
                     ),
                   ],
                 ),
-                onPressed: () async {
-                  print("onpress");
-                  String url = "https://fcm.googleapis.com/fcm/send";
-                  // Map<String, dynamic> body = NotifyMessage.toMap();
-                  var a = await createPost(url);
-                  print(a);
-                  print("finish");
-                },
+                onPressed: () {},
               ),
             ),
           ),
@@ -344,25 +351,69 @@ class _LifeTimerPageState extends State<LifeTimerPage> {
     return livingDurationInMillis * 100 / averageDeathDurationInMillis;
   }
 
-  Future<String> createPost(String url) async {
-    Map<String, String> headers = {
-      "Authorization":
-          "key=AAAANhJF6ZM:APA91bElIlTd2ykWYlPEqPlYMdJoNIJGLf8qhFNxBENmTQ3Ftnh7MBglvzAGpA0uB9YJSNO7bgJAz2gt30gxV87gJ0eWGPbUACGCQA9qUmbVpkh3S5O6xI-01dphmZwEvpufL59dN4Js"
-    };
-    Map body = {
-      "notification": {"body": "this is a body", "title": "this is a title"},
-      "priority": "high",
-      "data": {
-        "click_action": "FLUTTER_NOTIFICATION_CLICK",
-        "id": "1",
-        "status": "done"
-      },
-      "to": "/topics/all"
-    };
-    await apiRequest(url, body);
+  // Toggle
+  void switchNotify(bool notify) {
+    notifyTermFocusNode.unfocus();
+    setState(() {
+      doNotify = notify;
+    });
   }
 
-  Future<String> apiRequest(String url, Map jsonMap) async {
+  FocusNode notifyTermFocusNode = FocusNode();
+  final notifyTermController = TextEditingController();
+
+  Widget _buildNotifySettings(double deviceWidth) {
+    return Row(
+      children: <Widget>[
+        Text("通知する"),
+        Switch(value: doNotify, onChanged: switchNotify),
+        Container(
+          width: deviceWidth * 0.5,
+          child: TextField(
+            keyboardType: TextInputType.number,
+            focusNode: notifyTermFocusNode,
+            decoration: InputDecoration(labelText: "通知間隔(秒)"),
+            controller: notifyTermController,
+          ),
+        )
+      ],
+    );
+  }
+
+  Future<String> notifyLeftTime() async {
+    try {
+      int notifyTerm = int.parse(notifyTermController.text);
+      if (now.second % notifyTerm == 0 && doNotify) {
+        setState(() {
+          digits = [];
+          for (int i = 0; i < notifyTerm; i++) {
+            digits.add(i);
+            print(digits);
+          }
+        });
+
+        String url = "https://fcm.googleapis.com/fcm/send";
+        String notifyBody = _getLeftTimePercentStr();
+        String notifyTitle = "あなたの残り寿命は";
+        Map body = {
+          "notification": {"body": notifyBody, "title": notifyTitle},
+          "priority": "high",
+          "data": {
+            "click_action": "FLUTTER_NOTIFICATION_CLICK",
+            "id": "1",
+            "status": "done"
+          },
+          "to": "/topics/all"
+        };
+        return await post(url, body);
+      }
+    } catch (e) {
+      print(e);
+      return null;
+    }
+  }
+
+  Future<String> post(String url, Map jsonMap) async {
     HttpClient httpClient = new HttpClient();
     HttpClientRequest request = await httpClient.postUrl(Uri.parse(url));
     request.headers.set('Content-Type', 'application/json');
@@ -374,5 +425,35 @@ class _LifeTimerPageState extends State<LifeTimerPage> {
     String reply = await response.transform(utf8.decoder).join();
     httpClient.close();
     return reply;
+  }
+
+  Widget _buildFlipCounter() {
+    if (false) {
+      return Container();
+    } else {
+      return Center(
+        child: FlipPanel.builder(
+          itemBuilder: (context, index) => Container(
+                alignment: Alignment.center,
+                width: 120.0,
+                height: 128.0,
+                decoration: BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                ),
+                child: Text(
+                  '${digits[index]}',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 80.0,
+                      color: Colors.yellow),
+                ),
+              ),
+          itemsCount: digits.length,
+          period: Duration(milliseconds: 1000),
+          loop: -1,
+        ),
+      );
+    }
   }
 }
