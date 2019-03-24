@@ -32,21 +32,22 @@ class _LifeTimerNotifyPageState extends State<LifeTimerNotifyPage> {
   @override
   void initState() {
     super.initState();
+    setState(() {
+      digits = [];
+      for (int i = 0; i < 60; i++) {
+        digits.add(60 - i);
+      }
+    });
     Timer.periodic(Duration(seconds: 1), (timer) {
       setState(() {
         now = new DateTime.now();
-        digits = [];
-        for (int i = 0; i < 60; i++) {
-          digits.add(i);
-        }
       });
-      print(digits);
       notifyLeftTime();
     });
     _firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) async {
         print("onMessage: $message");
-        _buildDialog(context, "onMessage");
+        _buildDialog(context, _getLeftTimePercentStr());
       },
       onLaunch: (Map<String, dynamic> message) async {
         print("onLaunch: $message");
@@ -83,7 +84,7 @@ class _LifeTimerNotifyPageState extends State<LifeTimerNotifyPage> {
         barrierDismissible: false,
         builder: (BuildContext context) {
           return new AlertDialog(
-            content: new Text("Message: $message"),
+            content: new Text("寿命は残り: ${_getLeftTimePercentStr()}"),
             actions: <Widget>[
               new FlatButton(
                 child: const Text('CLOSE'),
@@ -92,7 +93,7 @@ class _LifeTimerNotifyPageState extends State<LifeTimerNotifyPage> {
                 },
               ),
               new FlatButton(
-                child: const Text('SHOW'),
+                child: const Text('OK'),
                 onPressed: () {
                   Navigator.pop(context, true);
                 },
@@ -102,7 +103,7 @@ class _LifeTimerNotifyPageState extends State<LifeTimerNotifyPage> {
         });
   }
 
-  var digits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+  var digits = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
 
   @override
   Widget build(BuildContext context) {
@@ -383,11 +384,12 @@ class _LifeTimerNotifyPageState extends State<LifeTimerNotifyPage> {
   Future<String> notifyLeftTime() async {
     try {
       int notifyTerm = int.parse(notifyTermController.text);
+      print(now.second);
       if (now.second % notifyTerm == 0 && doNotify) {
         setState(() {
           digits = [];
           for (int i = 0; i < notifyTerm; i++) {
-            digits.add(i);
+            digits.add(notifyTerm - i);
             print(digits);
           }
         });
@@ -428,7 +430,7 @@ class _LifeTimerNotifyPageState extends State<LifeTimerNotifyPage> {
   }
 
   Widget _buildFlipCounter() {
-    if (false) {
+    if (!doNotify) {
       return Container();
     } else {
       return Center(
