@@ -1,16 +1,8 @@
 # lifetimer
 
-A new Flutter project.
+## Demo
+![https___qiita-image-store s3 amazonaws com_0_206255_45296b14-0fdb-e247-9554-70db12ce3c65](https://user-images.githubusercontent.com/24355719/79191115-71d18600-7e58-11ea-885e-58cd4878d1c4.gif)
 
-## Getting Started
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.io/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.io/docs/cookbook)
-
-For help getting started with Flutter, view our 
-[online documentation](https://flutter.io/docs), which offers tutorials, 
-samples, guidance on mobile development, and a full API reference.
+## More Details
+https://qiita.com/shunp/items/2524371596fb0b6154bd
