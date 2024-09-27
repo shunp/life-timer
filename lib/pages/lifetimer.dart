@@ -23,6 +23,8 @@ class _LifeTimerPageState extends State<LifeTimerPage> {
   DateTime birthDate;
   DateTime now;
   DateTime expectedDeathDate;
+  // 文字列
+  String name;
 
   final FirebaseMessaging _firebaseMessaging = new FirebaseMessaging();
 
@@ -103,6 +105,14 @@ class _LifeTimerPageState extends State<LifeTimerPage> {
           children: <Widget>[
             _buildTitle(),
             _buildBirthDateInputField(),
+            _buildNameInputField(),
+            Image.asset(
+              'images/gakki_mu.jpg',
+              width: 600,
+              height: 250,
+              fit: BoxFit.cover,
+            ),
+            _buildGakkiComment(),
             _buildBirthTextField(),
             _buildNowTextField(),
             _buildExpectedDateTextField(),
@@ -112,6 +122,16 @@ class _LifeTimerPageState extends State<LifeTimerPage> {
         ),
       ),
     );
+  }
+
+  void setName(String _name) {
+    setState(() {
+      name = _name;
+    });
+  }
+
+  String _getName() {
+    return name != null ? name : "平匡";
   }
 
   Widget _buildTitle() {
@@ -321,6 +341,32 @@ class _LifeTimerPageState extends State<LifeTimerPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildGakkiComment() {
+    return Padding(
+      padding: EdgeInsets.all(30.0),
+      child: Column(
+        children: <Widget>[
+          Text("「${_getName()}さん！！"
+              "寿命が残り${_getExpectedDeathInDays()}日くらいだそうですよ！」",
+            style: TextStyle(fontSize: 20.0, color: Colors.white),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNameInputField() {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 10.0),
+      child: TextField(
+        decoration: InputDecoration(
+            labelText: '名前を入力してください', hasFloatingPlaceholder: false),
+        onChanged: (name) =>
+            setState(() => setName(name)),
       ),
     );
   }
